@@ -1,22 +1,13 @@
-<link rel="manifest" href="manifest.json">
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interactive Overtime Tracker</title>
-  <!-- Import Piximisa Font -->
+  <title>Overtime Tracker with Saved Data</title>
   <style>
-    @font-face {
-      font-family: 'Piximisa';
-      src: url('https://example.com/path-to-piximisa-font.woff2') format('woff2'); /* Replace with your hosted font link */
-    }
-
-    /* Page background */
     body {
-      background: linear-gradient(to bottom right, #f0f8ff, #d6e4ff);
-      font-family: 'Piximisa', Arial, sans-serif;
-      color: #333;
+      font-family: Arial, sans-serif;
+      background: #f0f8ff;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -24,147 +15,114 @@
       margin: 0;
     }
 
-    /* Container for the tracker */
     .tracker-container {
-      background: #ffffff;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      border-radius: 10px;
+      background: #fff;
       padding: 20px;
-      width: 600px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 400px;
       text-align: center;
     }
 
-    /* Logo */
-    .tracker-logo {
-      width: 100px;
-      margin: 0 auto 20px;
-    }
-
-    /* Heading style */
-    .tracker-title {
-      font-size: 24px;
-      margin-bottom: 20px;
-    }
-
-    /* Bar container */
     .overtime-bar {
+      position: relative;
       width: 100%;
       height: 30px;
       background-color: #ddd;
-      border: 2px solid #000;
-      position: relative;
-      overflow: hidden;
+      margin: 20px 0;
       border-radius: 5px;
-      margin: 10px 0;
+      overflow: hidden;
     }
 
-    /* Bar fill */
     .overtime-fill {
+      background-color: #4caf50;
       height: 100%;
-      background: linear-gradient(90deg, #76c7c0, #4caf50);
-      width: 0%; /* Initially empty */
-      position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 1;
+      width: 0%;
+      transition: width 0.5s;
     }
 
-    /* Moving and rotating icon */
     .moving-icon {
       position: absolute;
       top: 50%;
       left: 0;
       transform: translate(-50%, -50%);
       font-size: 24px;
-      animation: rotate-icon 2s linear infinite; /* Rotating animation */
-      z-index: 2; /* Keep icon above the fill */
-    }
-
-    /* Input and earnings text */
-    .controls {
-      margin-top: 20px;
-    }
-
-    label {
-      font-weight: bold;
     }
 
     input[type="number"] {
       padding: 5px;
-      margin-left: 10px;
+      margin: 10px 0;
       border: 1px solid #ccc;
       border-radius: 5px;
+      width: 50%;
     }
 
-    .earnings-text {
+    button {
+      padding: 10px 20px;
       margin-top: 10px;
-      font-size: 18px;
-      font-weight: bold;
+      background: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
     }
 
-    /* Keyframe for rotating the icon */
-    @keyframes rotate-icon {
-      0% {
-        transform: translate(-50%, -50%) rotate(0deg);
-      }
-      100% {
-        transform: translate(-50%, -50%) rotate(360deg);
-      }
+    button:hover {
+      background: #45a049;
     }
   </style>
 </head>
 <body>
-
-<div class="tracker-container">
-  <!-- Logo -->
-  <img src="your-logo-url.png" alt="Logo" class="tracker-logo"> <!-- Replace with your logo's URL -->
-
-  <div class="tracker-title">💼 Overtime Tracker</div>
-
-  <!-- Overtime Bar -->
-  <div class="overtime-bar">
-    <!-- Bar fill -->
-    <div class="overtime-fill" id="overtime-fill"></div>
-    <!-- Moving and rotating icon -->
-    <span class="moving-icon" id="moving-icon">💰</span>
+  <div class="tracker-container">
+    <h1>💼 Overtime Tracker</h1>
+    <div class="overtime-bar">
+      <div class="overtime-fill" id="overtime-fill"></div>
+      <span class="moving-icon" id="moving-icon">💰</span>
+    </div>
+    <input type="number" id="hours-input" placeholder="Enter hours worked" min="0" max="50">
+    <p id="earnings-text">Earned: ¥0</p>
+    <button onclick="clearData()">Clear Data</button>
   </div>
 
-  <!-- Controls for input and earnings display -->
-  <div class="controls">
-    <label for="hours-input">Enter worked hours:</label>
-    <input type="number" id="hours-input" value="0" min="0" max="50" step="1">
-    <p class="earnings-text" id="earnings-text">Earned: ¥0</p>
-  </div>
-</div>
+  <script>
+    const totalHours = 50;          // Total overtime goal
+    const hourlyRate = 1875;        // Hourly earnings in yen
 
-<script>
-  // Constants
-  const totalHours = 50;          // Total overtime goal
-  const hourlyRate = 1875;        // Hourly earnings in yen
+    // Elements
+    const fill = document.getElementById('overtime-fill');
+    const icon = document.getElementById('moving-icon');
+    const hoursInput = document.getElementById('hours-input');
+    const earningsText = document.getElementById('earnings-text');
 
-  // Elements
-  const fill = document.getElementById('overtime-fill');
-  const icon = document.getElementById('moving-icon');
-  const earningsText = document.getElementById('earnings-text');
-  const hoursInput = document.getElementById('hours-input');
+    // Load saved data
+    const savedHours = localStorage.getItem('workedHours') || 0;
+    hoursInput.value = savedHours;
+    updateBar();
 
-  // Function to update the bar and earnings based on input
-  function updateBar() {
-    const workedHours = parseFloat(hoursInput.value) || 0; // Get input value
-    const percentage = (workedHours / totalHours) * 100;   // Calculate percentage
-    const totalEarnings = workedHours * hourlyRate;        // Calculate earnings
+    // Function to update the bar and earnings
+    function updateBar() {
+      const workedHours = parseFloat(hoursInput.value) || 0;
+      const percentage = (workedHours / totalHours) * 100;
+      const totalEarnings = workedHours * hourlyRate;
 
-    // Update bar and icon
-    fill.style.width = Math.min(percentage, 100) + '%'; // Fill the bar (max 100%)
-    icon.style.left = Math.min(percentage, 100) + '%'; // Move icon (max 100%)
+      // Save data to localStorage
+      localStorage.setItem('workedHours', workedHours);
 
-    // Update earnings text
-    earningsText.textContent = `Earned: ¥${totalEarnings.toLocaleString()}`;
-  }
+      // Update bar, icon position, and earnings
+      fill.style.width = Math.min(percentage, 100) + '%';
+      icon.style.left = Math.min(percentage, 100) + '%';
+      earningsText.textContent = `Earned: ¥${totalEarnings.toLocaleString()}`;
+    }
 
-  // Attach event listener to the input
-  hoursInput.addEventListener('input', updateBar);
-</script>
+    // Attach event listener to update on input change
+    hoursInput.addEventListener('input', updateBar);
 
+    // Function to clear data
+    function clearData() {
+      localStorage.removeItem('workedHours');
+      hoursInput.value = 0;
+      updateBar();
+    }
+  </script>
 </body>
 </html>
