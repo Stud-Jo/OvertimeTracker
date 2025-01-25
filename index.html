@@ -93,4 +93,105 @@
     /* Keyframes for falling money */
     @keyframes fall {
       0% {
-        transform: translateY(-100px) rotate(0deg)
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* Randomly position money icons */
+    .falling-money:nth-child(odd) {
+      animation-duration: 4s;
+    }
+    .falling-money:nth-child(even) {
+      animation-duration: 5s;
+    }
+
+    /* Welcome message styling */
+    .welcome-message {
+      font-size: 24px;
+      font-weight: bold;
+      color: #4caf50;
+      margin-bottom: 20px;
+      animation: slideIn 1s ease-out;
+    }
+
+    @keyframes slideIn {
+      0% {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Falling money elements -->
+  <div class="falling-money" style="left: 10%; animation-delay: 0s;">💵</div>
+  <div class="falling-money" style="left: 25%; animation-delay: 1s;">💵</div>
+  <div class="falling-money" style="left: 50%; animation-delay: 2s;">💵</div>
+  <div class="falling-money" style="left: 75%; animation-delay: 3s;">💵</div>
+  <div class="falling-money" style="left: 90%; animation-delay: 4s;">💵</div>
+
+  <div class="tracker-container">
+    <!-- Welcome message -->
+    <div class="welcome-message" id="welcome-message">Welcome to the Overtime Tracker! 😊</div>
+
+    <h1>💼 Overtime Tracker</h1>
+    <div class="overtime-bar">
+      <div class="overtime-fill" id="overtime-fill"></div>
+      <span class="moving-icon" id="moving-icon">💰</span>
+    </div>
+    <input type="number" id="hours-input" placeholder="Enter hours worked" min="0" max="50">
+    <p id="earnings-text">Earned: ¥0</p>
+    <button onclick="clearData()">Clear Data</button>
+  </div>
+
+  <script>
+    const totalHours = 50;          // Total overtime goal
+    const hourlyRate = 1875;        // Hourly earnings in yen
+
+    // Elements
+    const fill = document.getElementById('overtime-fill');
+    const icon = document.getElementById('moving-icon');
+    const hoursInput = document.getElementById('hours-input');
+    const earningsText = document.getElementById('earnings-text');
+
+    // Load saved data
+    const savedHours = localStorage.getItem('workedHours') || 0;
+    hoursInput.value = savedHours;
+    updateBar();
+
+    // Function to update the bar and earnings
+    function updateBar() {
+      const workedHours = parseFloat(hoursInput.value) || 0;
+      const percentage = (workedHours / totalHours) * 100;
+      const totalEarnings = workedHours * hourlyRate;
+
+      // Save data to localStorage
+      localStorage.setItem('workedHours', workedHours);
+
+      // Update bar, icon position, and earnings
+      fill.style.width = Math.min(percentage, 100) + '%';
+      icon.style.left = Math.min(percentage, 100) + '%';
+      earningsText.textContent = `Earned: ¥${totalEarnings.toLocaleString()}`;
+    }
+
+    // Attach event listener to update on input change
+    hoursInput.addEventListener('input', updateBar);
+
+    // Function to clear data
+    function clearData() {
+      localStorage.removeItem('workedHours');
+      hoursInput.value = 0;
+      updateBar();
+    }
+  </script>
+</body>
+</html>
