@@ -86,30 +86,6 @@
       transform: scale(1.2);
     }
 
-    /* Input Section Styling */
-    .input-section {
-      margin: 20px 0;
-      padding: 20px;
-      background: #f9f9f9;
-      border-radius: 12px;
-      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .input-section input {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      font-size: 18px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-
-    .input-section .earned-text {
-      font-size: 20px;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-
     /* Overtime Bar Styling */
     .overtime-bar {
       width: 100%;
@@ -137,6 +113,31 @@
       animation: bounce 2s infinite ease-in-out;
     }
 
+    .calculator input, .calendar input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .result, .selected-date {
+      font-size: 18px;
+      margin-top: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* Branding */
+    .branding {
+      font-size: 14px;
+      margin-top: 20px;
+      color: #555;
+    }
+
     /* Responsive Design */
     @media (max-width: 768px) {
       .tracker-container {
@@ -154,6 +155,10 @@
 
       .moving-icon {
         font-size: 20px;
+      }
+
+      .branding {
+        font-size: 12px;
       }
     }
 
@@ -189,16 +194,35 @@
       <div class="overtime-fill" id="overtime-fill"></div>
       <span class="moving-icon" id="moving-icon">💰</span>
     </div>
+    <input type="number" id="hours-input" placeholder="Enter hours worked" min="0" max="50">
+    <p id="earnings-text">Earned: ¥0</p>
+    <p id="earnings-date" class="hidden">As of <span id="current-date"></span>, you earned ¥0</p>
+    <button onclick="clearData()">Clear Data</button>
 
-    <!-- Input Section -->
-    <div class="input-section">
-      <input type="number" id="hours-input" placeholder="Enter hours worked" min="0" max="50">
-      <p class="earned-text" id="earnings-text">Earned: ¥0</p>
-      <p id="earnings-date" class="earned-text hidden">As of <span id="current-date"></span>, you earned ¥0</p>
+    <!-- Toggle Buttons -->
+    <button onclick="toggleSection('calculator')">Toggle Calculator</button>
+    <button onclick="toggleSection('calendar')">Toggle Calendar</button>
+
+    <!-- Calculator Section -->
+    <div id="calculator" class="calculator hidden">
+      <h2>Calculator</h2>
+      <input type="number" id="calc-num1" placeholder="Enter first number">
+      <input type="number" id="calc-num2" placeholder="Enter second number">
+      <div>
+        <button onclick="calculate('add')">Add</button>
+        <button onclick="calculate('subtract')">Subtract</button>
+        <button onclick="calculate('multiply')">Multiply</button>
+        <button onclick="calculate('divide')">Divide</button>
+      </div>
+      <div class="result" id="calc-result">Result: </div>
     </div>
 
-    <!-- Controls -->
-    <button onclick="clearData()">Clear Data</button>
+    <!-- Calendar Section -->
+    <div id="calendar" class="calendar hidden">
+      <h2>Calendar</h2>
+      <input type="date" id="calendar-input" onchange="updateSelectedDate()">
+      <div class="selected-date" id="selected-date">No date selected</div>
+    </div>
 
     <p class="branding">Powered by Studio J</p>
   </div>
@@ -233,6 +257,7 @@
       icon.style.left = Math.min(percentage, 100) + '%';
       earningsText.textContent = `Earned: ¥${totalEarnings.toLocaleString()}`;
 
+      // Update "As of (date)" section
       const today = new Date().toLocaleDateString();
       currentDateText.textContent = today;
       earningsDate.classList.remove('hidden');
@@ -245,6 +270,27 @@
       localStorage.removeItem('workedHours');
       hoursInput.value = 0;
       updateBar();
+    }
+
+    function toggleSection(sectionId) {
+      const section = document.getElementById(sectionId);
+      section.classList.toggle('hidden');
+    }
+
+    function calculate(operation) {
+      const num1 = parseFloat(document.getElementById('calc-num1').value) || 0;
+      const num2 = parseFloat(document.getElementById('calc-num2').value) || 0;
+      let result;
+
+      switch (operation) {
+        case 'add': result = num1 + num2; break;
+        case 'subtract': result = num1 - num2; break;
+        case 'multiply': result = num1 * num2; break;
+        case 'divide': result = num2 !== 0 ? num1 / num2 : 'Error (divide by 0)'; break;
+        default: result = 'Invalid operation';
+      }
+
+      document.getElementById('calc-result').textContent = `Result: ${result}`;
     }
 
     function toggleDarkMode() {
