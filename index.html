@@ -30,7 +30,7 @@
       background: #fff;
       padding: 20px;
       border-radius: 15px;
-      box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+      box-shadow: 0px 5px 90px rgba(0, 0, 0, 0.2);
       width: 400px;
       max-width: 90%;
       text-align: center;
@@ -53,7 +53,7 @@
       color: #fff;
       border: none;
       border-radius: 8px;
-      padding: 10px 20px;
+      padding: 10px 30px;
       font-size: 14px;
       cursor: pointer;
       margin: 10px 5px;
@@ -112,28 +112,21 @@
       transition: width 0.5s; /* Smoothly expands */
     }
 
-    /* Hours Calculator Styling */
     .calculator {
       margin-top: 20px;
+      background: #f9f9f9;
       padding: 15px;
       border-radius: 12px;
       box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-      background: #f9f9f9;
-      display: none; /* Initially hidden */
-      animation: slideDown 0.3s ease-out;
     }
 
     .calculator input {
       width: 80%;
       padding: 10px;
-      margin: 10px 0;
+      margin: 7px 0;
       border: 1px solid #ccc;
       border-radius: 8px;
       font-size: 14px;
-    }
-
-    .calculator.active {
-      display: block; /* Display calculator when toggled */
     }
 
     /* Branding */
@@ -183,17 +176,6 @@
         background-position: 100% 50%;
       }
     }
-
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
   </style>
 </head>
 <body>
@@ -210,11 +192,8 @@
     <p id="earnings-date" class="hidden">As of <span id="current-date"></span>, you earned ¥0</p>
     <button onclick="clearData()">Clear Data</button>
 
-    <!-- Toggle Button for Calculator -->
-    <button onclick="toggleCalculator()">Toggle Hours Calculator</button>
-
     <!-- Hours Calculator -->
-    <div id="calculator" class="calculator">
+    <div class="calculator">
       <h2>Adjust Worked Hours</h2>
       <input type="number" id="calc-hours" placeholder="Enter hours to add or subtract">
       <div>
@@ -236,7 +215,6 @@
     const earningsDate = document.getElementById('earnings-date');
     const currentDateText = document.getElementById('current-date');
     const calcHoursInput = document.getElementById('calc-hours');
-    const calculator = document.getElementById('calculator');
 
     const savedHours = localStorage.getItem('workedHours') || 0;
     hoursInput.value = savedHours;
@@ -280,10 +258,11 @@
       updateBar();
     }
 
-    function toggleCalculator() {
-      calculator.classList.toggle('active');
-    }
-
     function toggleDarkMode() {
       const isDark = document.body.classList.toggle('dark');
-      document.querySelector('.
+      document.querySelector('.tracker-container').classList.toggle('dark');
+      localStorage.setItem('darkMode', isDark);
+    }
+  </script>
+</body>
+</html>
