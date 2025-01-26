@@ -4,7 +4,7 @@
   <link rel="manifest" href="manifest.json">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Overtime Tracker with Saved Data</title>
+  <title>Overtime Tracker with Calculator and Calendar</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -15,7 +15,7 @@
       height: 100vh;
       margin: 0;
       overflow: hidden;
-      position: relative; /* Needed for positioning falling money */
+      position: relative;
     }
 
     .tracker-container {
@@ -25,7 +25,25 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       width: 400px;
       text-align: center;
-      z-index: 10; /* Ensure the tracker is above falling money */
+      z-index: 10;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-top: 10px;
+      background: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    .hidden {
+      display: none;
     }
 
     .overtime-bar {
@@ -51,100 +69,51 @@
       left: 0;
       transform: translate(-50%, -50%);
       font-size: 24px;
-      animation: spin 2s linear infinite; /* Added spinning animation */
+      animation: spin 2s linear infinite;
     }
 
-    /* Keyframes for the spinning animation */
     @keyframes spin {
       0% { transform: translate(-50%, -50%) rotate(0deg); }
       100% { transform: translate(-50%, -50%) rotate(360deg); }
     }
 
-    input[type="number"] {
-      padding: 5px;
-      margin: 10px 0;
+    .calculator, .calendar {
+      margin-top: 20px;
+    }
+
+    .calculator input {
+      width: 90%;
+      padding: 10px;
+      margin: 5px 0;
+      font-size: 16px;
       border: 1px solid #ccc;
       border-radius: 5px;
-      width: 50%;
     }
 
-    button {
-      padding: 10px 20px;
+    .calculator button {
+      margin: 5px 2%;
+      width: 46%;
+      font-size: 14px;
+    }
+
+    .calendar input {
+      padding: 10px;
+      font-size: 16px;
+      width: 100%;
       margin-top: 10px;
-      background: #4caf50;
-      color: #fff;
-      border: none;
+      border: 1px solid #ccc;
       border-radius: 5px;
-      cursor: pointer;
     }
 
-    button:hover {
-      background: #45a049;
-    }
-
-    /* Falling money effect */
-    .falling-money {
-      position: absolute;
-      font-size: 24px;
-      animation: fall 3s linear infinite;
-      z-index: 5;
-    }
-
-    /* Keyframes for falling money */
-    @keyframes fall {
-      0% {
-        transform: translateY(-100px) rotate(0deg);
-        opacity: 1;
-      }
-      100% {
-        transform: translateY(100vh) rotate(360deg);
-        opacity: 0;
-      }
-    }
-
-    /* Randomly position money icons */
-    .falling-money:nth-child(odd) {
-      animation-duration: 4s;
-    }
-    .falling-money:nth-child(even) {
-      animation-duration: 5s;
-    }
-
-    /* Welcome message styling */
-    .welcome-message {
-      font-size: 24px;
-      font-weight: bold;
-      color: #4caf50;
-      margin-bottom: 20px;
-      opacity: 0;
-      animation: slideIn 1s forwards; /* Ensure the welcome message is shown */
-    }
-
-    @keyframes slideIn {
-      0% {
-        transform: translateY(-50px);
-        opacity: 0;
-      }
-      100% {
-        transform: translateY(0);
-        opacity: 1;
-      }
+    .result {
+      font-size: 18px;
+      margin-top: 10px;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <!-- Falling money elements -->
-  <div class="falling-money" style="left: 10%; animation-delay: 0s;">💵</div>
-  <div class="falling-money" style="left: 25%; animation-delay: 1s;">💵</div>
-  <div class="falling-money" style="left: 50%; animation-delay: 2s;">💵</div>
-  <div class="falling-money" style="left: 75%; animation-delay: 3s;">💵</div>
-  <div class="falling-money" style="left: 90%; animation-delay: 4s;">💵</div>
-  <div class="falling-money" style="left: 100%; animation-delay: 5s;">💵</div>
-
   <div class="tracker-container">
-    <!-- Welcome message -->
-    <div class="welcome-message" id="welcome-message">Welcome Studio J! 😊</div>
-
     <h1>🕰️ Overtime Tracker</h1>
     <div class="overtime-bar">
       <div class="overtime-fill" id="overtime-fill"></div>
@@ -153,46 +122,84 @@
     <input type="number" id="hours-input" placeholder="Enter hours worked" min="0" max="50">
     <p id="earnings-text">Earned: ¥0</p>
     <button onclick="clearData()">Clear Data</button>
+
+    <!-- Toggle Buttons -->
+    <button onclick="toggleSection('calculator')">Toggle Calculator</button>
+    <button onclick="toggleSection('calendar')">Toggle Calendar</button>
+
+    <!-- Calculator Section -->
+    <div id="calculator" class="calculator hidden">
+      <h2>Calculator</h2>
+      <input type="number" id="calc-num1" placeholder="Enter first number">
+      <input type="number" id="calc-num2" placeholder="Enter second number">
+      <div>
+        <button onclick="calculate('add')">Add</button>
+        <button onclick="calculate('subtract')">Subtract</button>
+        <button onclick="calculate('multiply')">Multiply</button>
+        <button onclick="calculate('divide')">Divide</button>
+      </div>
+      <div class="result" id="calc-result">Result: </div>
+    </div>
+
+    <!-- Calendar Section -->
+    <div id="calendar" class="calendar hidden">
+      <h2>Calendar</h2>
+      <input type="date" id="calendar-input">
+    </div>
   </div>
 
   <script>
-    const totalHours = 50;          // Total overtime goal
-    const hourlyRate = 1875;        // Hourly earnings in yen
+    const totalHours = 50;
+    const hourlyRate = 1875;
 
-    // Elements
     const fill = document.getElementById('overtime-fill');
     const icon = document.getElementById('moving-icon');
     const hoursInput = document.getElementById('hours-input');
     const earningsText = document.getElementById('earnings-text');
 
-    // Load saved data
     const savedHours = localStorage.getItem('workedHours') || 0;
     hoursInput.value = savedHours;
     updateBar();
 
-    // Function to update the bar and earnings
     function updateBar() {
       const workedHours = parseFloat(hoursInput.value) || 0;
       const percentage = (workedHours / totalHours) * 100;
       const totalEarnings = workedHours * hourlyRate;
 
-      // Save data to localStorage
       localStorage.setItem('workedHours', workedHours);
 
-      // Update bar, icon position, and earnings
       fill.style.width = Math.min(percentage, 100) + '%';
       icon.style.left = Math.min(percentage, 100) + '%';
       earningsText.textContent = `Earned: ¥${totalEarnings.toLocaleString()}`;
     }
 
-    // Attach event listener to update on input change
     hoursInput.addEventListener('input', updateBar);
 
-    // Function to clear data
     function clearData() {
       localStorage.removeItem('workedHours');
       hoursInput.value = 0;
       updateBar();
+    }
+
+    function toggleSection(sectionId) {
+      const section = document.getElementById(sectionId);
+      section.classList.toggle('hidden');
+    }
+
+    function calculate(operation) {
+      const num1 = parseFloat(document.getElementById('calc-num1').value) || 0;
+      const num2 = parseFloat(document.getElementById('calc-num2').value) || 0;
+      let result;
+
+      switch (operation) {
+        case 'add': result = num1 + num2; break;
+        case 'subtract': result = num1 - num2; break;
+        case 'multiply': result = num1 * num2; break;
+        case 'divide': result = num2 !== 0 ? num1 / num2 : 'Error (divide by 0)'; break;
+        default: result = 'Invalid operation';
+      }
+
+      document.getElementById('calc-result').textContent = `Result: ${result}`;
     }
   </script>
 </body>
