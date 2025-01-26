@@ -118,6 +118,11 @@
       padding: 15px;
       border-radius: 12px;
       box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+      display: none; /* Hidden by default */
+    }
+
+    .calculator.visible {
+      display: block; /* Show when the class 'visible' is added */
     }
 
     .calculator input {
@@ -192,8 +197,11 @@
     <p id="earnings-date" class="hidden">As of <span id="current-date"></span>, you earned ¥0</p>
     <button onclick="clearData()">Clear Data</button>
 
+    <!-- Hours Calculator Toggle Button -->
+    <button onclick="toggleCalculator()">Toggle Hours Calculator</button>
+
     <!-- Hours Calculator -->
-    <div class="calculator">
+    <div class="calculator" id="calculator">
       <h2>Adjust Worked Hours</h2>
       <input type="number" id="calc-hours" placeholder="Enter hours to add or subtract">
       <div>
@@ -215,6 +223,7 @@
     const earningsDate = document.getElementById('earnings-date');
     const currentDateText = document.getElementById('current-date');
     const calcHoursInput = document.getElementById('calc-hours');
+    const calculator = document.getElementById('calculator');
 
     const savedHours = localStorage.getItem('workedHours') || 0;
     hoursInput.value = savedHours;
@@ -262,6 +271,10 @@
       const isDark = document.body.classList.toggle('dark');
       document.querySelector('.tracker-container').classList.toggle('dark');
       localStorage.setItem('darkMode', isDark);
+    }
+
+    function toggleCalculator() {
+      calculator.classList.toggle('visible');
     }
   </script>
 </body>
