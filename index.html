@@ -54,9 +54,9 @@
       border: none;
       border-radius: 8px;
       padding: 10px 20px;
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
-      margin: 10px 0;
+      margin: 10px 5px;
       transition: background 0.3s, transform 0.2s;
     }
 
@@ -99,36 +99,41 @@
 
     .overtime-fill {
       height: 100%;
-      background: linear-gradient(90deg, #4caf50, #76c7c0);
-      width: 0%;
-      transition: width 0.5s;
+      width: 0%; /* Dynamically updated via JavaScript */
+      background: linear-gradient(
+        90deg,
+        #4caf50,
+        #76c7c0,
+        #4caf50,
+        #76c7c0
+      );
+      background-size: 200% 100%;
+      animation: gradientMove 3s linear infinite; /* Infinite animation */
+      transition: width 0.5s; /* Smoothly expands */
     }
 
-    .moving-icon {
-      position: absolute;
-      top: 50%;
-      left: 0;
-      transform: translate(-50%, -50%);
-      font-size: 24px;
-      animation: bounce 2s infinite ease-in-out;
+    /* Hours Calculator Styling */
+    .calculator {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+      background: #f9f9f9;
+      display: none; /* Initially hidden */
+      animation: slideDown 0.3s ease-out;
     }
 
-    .calculator input, .calendar input {
-      width: 100%;
+    .calculator input {
+      width: 80%;
       padding: 10px;
       margin: 10px 0;
       border: 1px solid #ccc;
       border-radius: 8px;
-      font-size: 16px;
+      font-size: 14px;
     }
 
-    .result, .selected-date {
-      font-size: 18px;
-      margin-top: 10px;
-    }
-
-    .hidden {
-      display: none;
+    .calculator.active {
+      display: block; /* Display calculator when toggled */
     }
 
     /* Branding */
@@ -153,10 +158,6 @@
         padding: 8px 16px;
       }
 
-      .moving-icon {
-        font-size: 20px;
-      }
-
       .branding {
         font-size: 12px;
       }
@@ -174,12 +175,23 @@
       }
     }
 
-    @keyframes bounce {
-      0%, 100% {
-        transform: translate(-50%, -50%) scale(1);
+    @keyframes gradientMove {
+      0% {
+        background-position: 0% 50%;
       }
-      50% {
-        transform: translate(-50%, -60%) scale(1.2);
+      100% {
+        background-position: 100% 50%;
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
   </style>
@@ -192,36 +204,23 @@
     <!-- Overtime Tracker -->
     <div class="overtime-bar">
       <div class="overtime-fill" id="overtime-fill"></div>
-      <span class="moving-icon" id="moving-icon">💰</span>
     </div>
     <input type="number" id="hours-input" placeholder="Enter hours worked" min="0" max="50">
     <p id="earnings-text">Earned: ¥0</p>
     <p id="earnings-date" class="hidden">As of <span id="current-date"></span>, you earned ¥0</p>
     <button onclick="clearData()">Clear Data</button>
 
-    <!-- Toggle Buttons -->
-    <button onclick="toggleSection('calculator')">Toggle Calculator</button>
-    <button onclick="toggleSection('calendar')">Toggle Calendar</button>
+    <!-- Toggle Button for Calculator -->
+    <button onclick="toggleCalculator()">Toggle Hours Calculator</button>
 
-    <!-- Calculator Section -->
-    <div id="calculator" class="calculator hidden">
-      <h2>Calculator</h2>
-      <input type="number" id="calc-num1" placeholder="Enter first number">
-      <input type="number" id="calc-num2" placeholder="Enter second number">
+    <!-- Hours Calculator -->
+    <div id="calculator" class="calculator">
+      <h2>Adjust Worked Hours</h2>
+      <input type="number" id="calc-hours" placeholder="Enter hours to add or subtract">
       <div>
-        <button onclick="calculate('add')">Add</button>
-        <button onclick="calculate('subtract')">Subtract</button>
-        <button onclick="calculate('multiply')">Multiply</button>
-        <button onclick="calculate('divide')">Divide</button>
+        <button onclick="adjustHours('add')">Add Hours</button>
+        <button onclick="adjustHours('subtract')">Subtract Hours</button>
       </div>
-      <div class="result" id="calc-result">Result: </div>
-    </div>
-
-    <!-- Calendar Section -->
-    <div id="calendar" class="calendar hidden">
-      <h2>Calendar</h2>
-      <input type="date" id="calendar-input" onchange="updateSelectedDate()">
-      <div class="selected-date" id="selected-date">No date selected</div>
     </div>
 
     <p class="branding">Powered by Studio J</p>
@@ -232,15 +231,12 @@
     const hourlyRate = 1875;
 
     const fill = document.getElementById('overtime-fill');
-    const icon = document.getElementById('moving-icon');
     const hoursInput = document.getElementById('hours-input');
     const earningsText = document.getElementById('earnings-text');
     const earningsDate = document.getElementById('earnings-date');
     const currentDateText = document.getElementById('current-date');
-
-    // Load Dark Mode State
-    const isDarkMode = localStorage.getItem('darkMode') === 'true';
-    if (isDarkMode) enableDarkMode();
+    const calcHoursInput = document.getElementById('calc-hours');
+    const calculator = document.getElementById('calculator');
 
     const savedHours = localStorage.getItem('workedHours') || 0;
     hoursInput.value = savedHours;
@@ -254,10 +250,8 @@
       localStorage.setItem('workedHours', workedHours);
 
       fill.style.width = Math.min(percentage, 100) + '%';
-      icon.style.left = Math.min(percentage, 100) + '%';
       earningsText.textContent = `Earned: ¥${totalEarnings.toLocaleString()}`;
 
-      // Update "As of (date)" section
       const today = new Date().toLocaleDateString();
       currentDateText.textContent = today;
       earningsDate.classList.remove('hidden');
@@ -272,37 +266,24 @@
       updateBar();
     }
 
-    function toggleSection(sectionId) {
-      const section = document.getElementById(sectionId);
-      section.classList.toggle('hidden');
-    }
+    function adjustHours(operation) {
+      const adjustment = parseFloat(calcHoursInput.value) || 0;
+      let currentHours = parseFloat(hoursInput.value) || 0;
 
-    function calculate(operation) {
-      const num1 = parseFloat(document.getElementById('calc-num1').value) || 0;
-      const num2 = parseFloat(document.getElementById('calc-num2').value) || 0;
-      let result;
-
-      switch (operation) {
-        case 'add': result = num1 + num2; break;
-        case 'subtract': result = num1 - num2; break;
-        case 'multiply': result = num1 * num2; break;
-        case 'divide': result = num2 !== 0 ? num1 / num2 : 'Error (divide by 0)'; break;
-        default: result = 'Invalid operation';
+      if (operation === 'add') {
+        currentHours += adjustment;
+      } else if (operation === 'subtract') {
+        currentHours = Math.max(0, currentHours - adjustment);
       }
 
-      document.getElementById('calc-result').textContent = `Result: ${result}`;
+      hoursInput.value = currentHours;
+      updateBar();
+    }
+
+    function toggleCalculator() {
+      calculator.classList.toggle('active');
     }
 
     function toggleDarkMode() {
       const isDark = document.body.classList.toggle('dark');
-      document.querySelector('.tracker-container').classList.toggle('dark');
-      localStorage.setItem('darkMode', isDark);
-    }
-
-    function enableDarkMode() {
-      document.body.classList.add('dark');
-      document.querySelector('.tracker-container').classList.add('dark');
-    }
-  </script>
-</body>
-</html>
+      document.querySelector('.
