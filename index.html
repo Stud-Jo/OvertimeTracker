@@ -4,61 +4,81 @@
   <link rel="manifest" href="manifest.json">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Overtime Tracker with Calculator and Calendar</title>
+  <title>Overtime Tracker</title>
   <style>
+    /* General Body Styling */
     body {
-      font-family: Arial, sans-serif;
-      background: #f0f8ff;
+      font-family: 'Arial', sans-serif;
+      background: #f4f4f9;
+      color: #333;
+      margin: 0;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      margin: 0;
-      overflow: hidden;
-      position: relative;
+      transition: background 0.5s, color 0.5s;
+    }
+
+    /* Dark Mode */
+    body.dark {
+      background: #1e1e1e;
+      color: #f4f4f9;
     }
 
     .tracker-container {
       background: #fff;
       padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      border-radius: 15px;
+      box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
       width: 400px;
       text-align: center;
-      z-index: 10;
+      transition: background 0.5s, color 0.5s;
+    }
+
+    .tracker-container.dark {
+      background: #333;
+      color: #f4f4f9;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
     }
 
     button {
-      padding: 10px 20px;
-      margin-top: 10px;
       background: #4caf50;
       color: #fff;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 16px;
       cursor: pointer;
+      margin: 10px 0;
+      transition: background 0.3s;
     }
 
     button:hover {
       background: #45a049;
     }
 
-    .hidden {
-      display: none;
+    button.dark {
+      background: #007bff;
     }
 
+    /* Overtime Bar Styling */
     .overtime-bar {
-      position: relative;
       width: 100%;
       height: 30px;
-      background-color: #ddd;
+      background: #ddd;
       margin: 20px 0;
       border-radius: 5px;
+      position: relative;
       overflow: hidden;
     }
 
     .overtime-fill {
-      background-color: #4caf50;
       height: 100%;
+      background: linear-gradient(90deg, #4caf50, #76c7c0);
       width: 0%;
       transition: width 0.5s;
     }
@@ -69,52 +89,38 @@
       left: 0;
       transform: translate(-50%, -50%);
       font-size: 24px;
-      animation: spin 2s linear infinite;
     }
 
-    @keyframes spin {
-      0% { transform: translate(-50%, -50%) rotate(0deg); }
-      100% { transform: translate(-50%, -50%) rotate(360deg); }
-    }
-
-    .calculator, .calendar {
-      margin-top: 20px;
-    }
-
-    .calculator input {
-      width: 90%;
-      padding: 10px;
-      margin: 5px 0;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
-    .calculator button {
-      margin: 5px 2%;
-      width: 46%;
-      font-size: 14px;
-    }
-
-    .calendar input {
-      padding: 10px;
-      font-size: 16px;
+    .calculator input, .calendar input {
       width: 100%;
-      margin-top: 10px;
+      padding: 10px;
+      margin: 10px 0;
       border: 1px solid #ccc;
-      border-radius: 5px;
+      border-radius: 8px;
+      font-size: 16px;
     }
 
-    .result {
+    .result, .selected-date {
       font-size: 18px;
       margin-top: 10px;
-      text-align: center;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .dark-mode-toggle {
+      background: #007bff;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
   <div class="tracker-container">
+    <button class="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Mode</button>
     <h1>🕰️ Overtime Tracker</h1>
+
+    <!-- Overtime Tracker -->
     <div class="overtime-bar">
       <div class="overtime-fill" id="overtime-fill"></div>
       <span class="moving-icon" id="moving-icon">💰</span>
@@ -137,6 +143,7 @@
         <button onclick="calculate('subtract')">Subtract</button>
         <button onclick="calculate('multiply')">Multiply</button>
         <button onclick="calculate('divide')">Divide</button>
+        <button onclick="clearCalculator()">Clear</button>
       </div>
       <div class="result" id="calc-result">Result: </div>
     </div>
@@ -144,11 +151,13 @@
     <!-- Calendar Section -->
     <div id="calendar" class="calendar hidden">
       <h2>Calendar</h2>
-      <input type="date" id="calendar-input">
+      <input type="date" id="calendar-input" onchange="updateSelectedDate()">
+      <div class="selected-date" id="selected-date">No date selected</div>
     </div>
   </div>
 
   <script>
+    // Tracker Variables
     const totalHours = 50;
     const hourlyRate = 1875;
 
@@ -161,6 +170,7 @@
     hoursInput.value = savedHours;
     updateBar();
 
+    // Update Tracker Bar and Earnings
     function updateBar() {
       const workedHours = parseFloat(hoursInput.value) || 0;
       const percentage = (workedHours / totalHours) * 100;
@@ -173,19 +183,23 @@
       earningsText.textContent = `Earned: ¥${totalEarnings.toLocaleString()}`;
     }
 
+    // Event Listener
     hoursInput.addEventListener('input', updateBar);
 
+    // Clear Data
     function clearData() {
       localStorage.removeItem('workedHours');
       hoursInput.value = 0;
       updateBar();
     }
 
+    // Toggle Section Visibility
     function toggleSection(sectionId) {
       const section = document.getElementById(sectionId);
       section.classList.toggle('hidden');
     }
 
+    // Calculator Functions
     function calculate(operation) {
       const num1 = parseFloat(document.getElementById('calc-num1').value) || 0;
       const num2 = parseFloat(document.getElementById('calc-num2').value) || 0;
@@ -200,6 +214,26 @@
       }
 
       document.getElementById('calc-result').textContent = `Result: ${result}`;
+    }
+
+    function clearCalculator() {
+      document.getElementById('calc-num1').value = '';
+      document.getElementById('calc-num2').value = '';
+      document.getElementById('calc-result').textContent = 'Result: ';
+    }
+
+    // Calendar Functions
+    function updateSelectedDate() {
+      const dateInput = document.getElementById('calendar-input').value;
+      document.getElementById('selected-date').textContent = dateInput
+        ? `Selected Date: ${dateInput}`
+        : 'No date selected';
+    }
+
+    // Dark Mode Toggle
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark');
+      document.querySelector('.tracker-container').classList.toggle('dark');
     }
   </script>
 </body>
