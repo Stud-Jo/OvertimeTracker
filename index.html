@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Overtime Tracker</title>
   <style>
-    /* General Body Styling */
+    /* General Styling */
     body {
       font-family: 'Arial', sans-serif;
       background: #f4f4f9;
@@ -32,6 +32,7 @@
       border-radius: 15px;
       box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
       width: 400px;
+      max-width: 90%;
       text-align: center;
       transition: background 0.5s, color 0.5s;
       animation: fadeIn 1.5s ease-in-out;
@@ -64,8 +65,25 @@
       transform: scale(1.05);
     }
 
-    button.dark {
+    button.small {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      font-size: 20px;
       background: #007bff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    button.small:hover {
+      background: #0056b3;
+      transform: scale(1.2);
     }
 
     /* Overtime Bar Styling */
@@ -107,7 +125,6 @@
     .result, .selected-date {
       font-size: 18px;
       margin-top: 10px;
-      animation: slideIn 1.5s ease-out;
     }
 
     .hidden {
@@ -119,6 +136,30 @@
       font-size: 14px;
       margin-top: 20px;
       color: #555;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .tracker-container {
+        padding: 15px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      button {
+        font-size: 14px;
+        padding: 8px 16px;
+      }
+
+      .moving-icon {
+        font-size: 20px;
+      }
+
+      .branding {
+        font-size: 12px;
+      }
     }
 
     /* Animations */
@@ -141,28 +182,11 @@
         transform: translate(-50%, -60%) scale(1.2);
       }
     }
-
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Dark Mode Toggle */
-    .dark-mode-toggle {
-      background: #007bff;
-      margin-bottom: 10px;
-    }
   </style>
 </head>
 <body>
+  <button class="small" onclick="toggleDarkMode()">🌙</button>
   <div class="tracker-container">
-    <button class="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Mode</button>
     <h1>🕰️ Overtime Tracker</h1>
 
     <!-- Overtime Tracker -->
@@ -213,6 +237,10 @@
     const earningsText = document.getElementById('earnings-text');
     const earningsDate = document.getElementById('earnings-date');
     const currentDateText = document.getElementById('current-date');
+
+    // Load Dark Mode State
+    const isDarkMode = localStorage.getItem('darkMode') === 'true';
+    if (isDarkMode) enableDarkMode();
 
     const savedHours = localStorage.getItem('workedHours') || 0;
     hoursInput.value = savedHours;
@@ -266,8 +294,14 @@
     }
 
     function toggleDarkMode() {
-      document.body.classList.toggle('dark');
+      const isDark = document.body.classList.toggle('dark');
       document.querySelector('.tracker-container').classList.toggle('dark');
+      localStorage.setItem('darkMode', isDark);
+    }
+
+    function enableDarkMode() {
+      document.body.classList.add('dark');
+      document.querySelector('.tracker-container').classList.add('dark');
     }
   </script>
 </body>
